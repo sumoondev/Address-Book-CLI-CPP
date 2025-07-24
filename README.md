@@ -41,9 +41,22 @@ This project Address Book application implements:
 
 2. **Build and Run**
 
-    ```
-    cd src/
-    ```
+    * **Required Dependencies**
+      - C/C++ 
+      - C/C++ Extension Pack
+      *Note: For Visual Studio Code*
+
+   * **For Windows**:
+
+     ```bash
+
+     ```
+   
+   * **For Linux/Mac**:
+
+     ```bash
+      
+     ```
 
 3. **Usage**
 
