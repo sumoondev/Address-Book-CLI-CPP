@@ -91,9 +91,9 @@ class DataContainer {
 
 // For performing vital operations like add contact, delete contact, etc;
 class Service {
-    private:
-        static Contact* root;
+    private: 
 
+    public:
 
 };
 
@@ -101,7 +101,7 @@ class Service {
 // For performing utility operations like clear screen, load and save contact, etc.
 class Utility {
     private:
-
+        string FILE_PATH = "addressbook.json";
     public: 
         static void clearScreen() {
             // Check the operating system
@@ -112,13 +112,22 @@ class Utility {
             #endif
         } 
         
-        static void printInvalid() {
-
+        static void printWithAnimation(string print) {
+            for(int i = 0; i < print.length(); i++) {
+                cout << print[i] << flush;
+                this_thread::sleep_for(chrono::milliseconds(100));
+            }
+            this_thread::sleep_for(chrono::milliseconds(200));
+            cout << "\r" << flush;
+            for(int i = 0; i < print.length(); i++) {
+                cout << " " << flush;
+                this_thread::sleep_for(chrono::milliseconds(100));
+            }
         }
 };
 
 // Main section that executes
 int main() {
-
+    Contact* root = NULL;
     return 0;
 }
