@@ -12,7 +12,6 @@ Address-Book-CLI-CPP/                 ← Top-level repository
 ├── .gitignore                        ← Files and folders to ignore in Git
 ├── LICENSE
 │── target/                           ← Output: compiled objects (`.obj`), etc.
-│── include/                          ← Directory is for header files
 │── src/                              ← Contains all the source code
 │── libs/                             ← Consists all the third party libraries 
 │── test/                             
