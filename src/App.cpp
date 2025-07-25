@@ -89,15 +89,6 @@ class DataContainer {
         }
 };
 
-// For performing vital operations like add contact, delete contact, etc;
-class Service {
-    private: 
-
-    public:
-
-};
-
-
 // For performing utility operations like clear screen, load and save contact, etc.
 class Utility {
     private:
@@ -118,16 +109,154 @@ class Utility {
                 this_thread::sleep_for(chrono::milliseconds(100));
             }
             this_thread::sleep_for(chrono::milliseconds(200));
-            cout << "\r" << flush;
-            for(int i = 0; i < print.length(); i++) {
-                cout << " " << flush;
-                this_thread::sleep_for(chrono::milliseconds(100));
+            // cout << "\r" ;               // "\r" - takes the cursor to the beginning of the current line
+            // for(int i = 0; i < print.length(); i++) {
+            //     cout << " " << flush;
+            //     this_thread::sleep_for(chrono::milliseconds(100));
+            // }
+        }
+
+        static bool isNameValid(string name) {
+            for(int i = 0; i < name.length(); i++) {
+                if(name[i] != ' ' && (name[i] < 'a' || name[i] > 'z') && (name[i] < 'A' || name[i] > 'Z')) {
+                    return false;
+                }
             }
+            return true;
+        }
+
+        static bool isEmailValid(string email) {
+            string validate = "@gmail.com";
+            if(email.length() <= validate.length()) {
+                return false;
+            }
+            if(email.substr(email.length(), validate.length()).compare(validate) != 0) {
+                return false;
+            }
+            return true;
+        }
+};
+
+// For performing vital operations like add contact, delete contact, etc;
+class Service {
+    private: 
+        Contact* root;
+
+        void display(int t, string email = NULL, string address = NULL, long mobile = NULL, string name = NULL) {
+            Utility::clearScreen();
+            cout << "=== Add Contact ===\n";
+            if(name.compare(NULL) == 0) {
+                cout << "Full Name : " ;
+                Utility::printWithAnimation("Name is not valid !!\tTry ");
+                cout << t << " / 3";
+                this_thread::sleep_for(chrono::milliseconds(500));
+            }
+            else if(mobile == NULL) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : ";
+                Utility::printWithAnimation("Number is not valid !!\tTry ");
+                cout << t << " / 3";
+                this_thread::sleep_for(chrono::milliseconds(500));
+            }
+            else if(address.compare(NULL) == 0) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : " << mobile;
+                cout << "Address : ";
+                Utility::printWithAnimation("Address is not valid !!\tTry ");
+                cout << t << " / 3";
+                this_thread::sleep_for(chrono::milliseconds(500));
+            }
+            else if(email.compare(NULL) == 0) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : " << mobile;
+                cout << "Address : " << address;
+                cout << "Email : ";
+                Utility::printWithAnimation("Email is not valid !!\tTry ");
+                cout << t << " / 3";
+                this_thread::sleep_for(chrono::milliseconds(500));
+            }
+            Utility::clearScreen();
+            cout << "=== Add Contact ===\n";
+            if(name.compare(NULL) == 0) {
+                cout << "Full Name : " ;
+            }
+            else if(mobile == NULL) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : ";
+            }
+            else if(address.compare(NULL) == 0) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : " << mobile;
+                cout << "Address : ";
+            }
+            else if(email.compare(NULL) == 0) {
+                cout << "Full Name : " << name;
+                cout << "Mobile : " << mobile;
+                cout << "Address : " << address;
+                cout << "Email : ";
+            }
+        }
+    public:
+        Service(Contact* persons) {
+            root = persons;
+        }        
+
+        void addContact() {
+            string name, address = NULL, email;
+            long mobile;
+            int t = 1;
+
+            Utility::clearScreen();
+            cout << "=== Add Contact ===" << endl;
+            cout << "Full Name : ";
+            do {
+                getline(cin, name);
+                if(!Utility::isNameValid(name)) {
+                    display(t++);
+                }
+            } while(Utility::isNameValid(name));
+            t = 1;
         }
 };
 
 // Main section that executes
 int main() {
     Contact* root = NULL;
+    Service serv = Service(root);
+    char choice;
+    bool loop = true;
+    while(loop) {
+        Utility::clearScreen();
+        cout << "=== Address Book CLI ===" << endl;
+        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n0) Exit" << endl;
+        cout << "Enter a choice : ";
+        cin >> choice;
+        switch (choice)
+        {
+        case '1':
+            // serv.addContact();
+            break;
+        case '2':
+            
+            break;
+        case '3':
+            
+            break;
+        case '4':
+
+            break;
+        case '5':
+            
+            break;
+        case '0':
+            loop = false;
+            break;
+        default:
+            cout << "\x1b[A";           // move cursor up by one line
+            cout << "Enter a choice : ";
+            Utility::printWithAnimation("Invalid choice, please try again");
+            break;
+        }
+    }
     return 0;
 }

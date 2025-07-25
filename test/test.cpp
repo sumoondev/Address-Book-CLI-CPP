@@ -15,17 +15,17 @@ void clearScreen() {
     #endif
 }
 
-void printWithAnimation(string print) {
-    for(int i = 0; i < print.length(); i++) {
+static void printWithAnimation(string print) {
+            for(int i = 0; i < print.length(); i++) {
                 cout << print[i] << flush;
                 this_thread::sleep_for(chrono::milliseconds(100));
             }
-            this_thread::sleep_for(chrono::milliseconds(200));
-            cout << "\r" << flush;
-            for(int i = 0; i < print.length(); i++) {
-                cout << " " << flush;
-                this_thread::sleep_for(chrono::milliseconds(100));
-            }
+            this_thread::sleep_for(chrono::milliseconds(500));
+            // cout << "\r" << flush;
+            // for(int i = 0; i < print.length(); i++) {
+            //     cout << " " << flush;
+            //     this_thread::sleep_for(chrono::milliseconds(100));
+            // }
         }
 int main() {
     // cout << "This is some text." << endl;
@@ -36,7 +36,43 @@ int main() {
     // string getc;
     // cin >> getc;
 
-    printWithAnimation("I n v a l i d  ! ! !");
+    // printWithAnimation("I n v a l i d  ! ! !");
     
+    char choice;
+    bool loop = true;
+    while(loop) {
+        clearScreen();
+        cout << "=== Address Book CLI ===" << endl;
+        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n0) Exit" << endl;
+        cout << "Enter a choice : ";
+        cin >> choice;
+        switch (choice)
+        {
+        case '1':
+            
+            break;
+        case '2':
+            
+            break;
+        case '3':
+            
+            break;
+        case '4':
+
+            break;
+        case '5':
+            
+            break;
+        case '0':
+            loop = false;
+            break;
+        default:
+            cout << "\x1b[A"; 
+            cout << "Enter a choice : ";
+            printWithAnimation("Invalid choice, please try again!!!");
+            break;
+        }
+    }
+
     return 0;
 }
