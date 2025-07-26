@@ -88,4 +88,10 @@ This module is distributed under the [Apache License](LICENSE).
 
 ---
 
+## Acknowledgments
+
+This project uses the [nlohmann/json](https://github.com/nlohmann/json) library for JSON handling, which is licensed under the MIT License. The original copyright notice is included in the `libs/json` directory.
+
+---
+
 — Built by **The G's** | © 2025
