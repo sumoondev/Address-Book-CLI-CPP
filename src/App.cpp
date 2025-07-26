@@ -3,6 +3,7 @@
 #include <cstring>      // perform string operation
 #include <chrono>       // for chrono::millisecond() fn
 #include <thread>       // for this_thread::sleep_for() fn
+#include <fstream>      // for file handling
 #include "../libs/json/include/nlohmann/json.hpp" // Adjust the path to include json.hpp
 
 using json = nlohmann::json;
@@ -78,14 +79,46 @@ class Contact {
         bool compareToUtil(string test) {
             return this->name.substr(0,test.length()).compare(test);
         }
+
+        // Serialize a contact (including subtree)
+        static json serialize(Contact* node) {
+            if (!node) return nullptr;
+            
+            json j;
+            j["name"] = node->name;
+            j["mobile"] = node->mobile;
+            j["address"] = node->address;
+            j["email"] = node->email;
+            j["height"] = node->height;
+            j["left"] = serialize(node->left);
+            j["right"] = serialize(node->right);
+            
+            return j;
+        }
+
+        // Deserialize a contact (including subtree)
+        static Contact* deserialize(const json& j) {
+            if (j.is_null()) return nullptr;
+            
+            Contact* node = new Contact(
+                j["name"].get<string>(),
+                j["mobile"].get<long>(),
+                j["address"].get<string>(),
+                j["email"].get<string>()
+            );
+            node->height = j["height"].get<int>();
+            node->left = deserialize(j["left"]);
+            node->right = deserialize(j["right"]);
+            
+            return node;
+        }
 };
 
 // Object to store in JSON file
 class Profile {
-    private:
-        string password;
     public: 
         string username;
+        string password;
         Contact* contact;
         int count;
 
@@ -94,7 +127,9 @@ class Profile {
             count = 0;
         }
 
-        Profile(Contact* root, int count) {
+        Profile(string username, string pwd, Contact* root, int count) {
+            this->username = username;
+            this->password = pwd;
             contact = root;
             this->count = count;
         }
@@ -105,12 +140,28 @@ class Profile {
             }
             return false;
         }
+
+        void to_json(json& j) const {
+            j = {
+                {"username", username},
+                {"password", password},
+                {"contact", Contact::serialize(contact)},
+                {"count", count}
+            };
+        }
+
+        void from_json(const json& j) {
+            username = j["username"];
+            password = j["password"];
+            contact = Contact::deserialize(j["contact"]);
+            count = j["count"];
+        }
 };
 
 // For performing utility operations like clear screen, load and save contact, etc.
 class Utility {
     private:
-        string FILE_PATH = "addressbook.json";
+        string FILE_PATH = "../addressbook.json";
     public: 
         static void clearScreen() {
             // Check the operating system
@@ -152,6 +203,32 @@ class Utility {
                 return false;
             }
             return true;
+        }
+
+        // Save entire profile array to json
+        void saveProfiles(Profile profiles[], int size) {
+            json j_array = json::array();
+            
+            for (int i = 0; i < size; i++) {
+                json j_profile;
+                profiles[i].to_json(j_profile);
+                j_array.push_back(j_profile);
+            }
+            
+            ofstream ofs(FILE_PATH);
+            ofs << j_array.dump(4);  // Pretty print with indentation
+        }
+
+        // Load profiles from JSON
+        void loadProfiles(Profile profiles[], int& size) {
+            ifstream ifs(FILE_PATH);
+            json j_array;
+            ifs >> j_array;
+            
+            size = j_array.size();
+            for (int i = 0; i < size; i++) {
+                profiles[i].from_json(j_array[i]);
+            }
         }
 };
 
@@ -285,7 +362,10 @@ void menu(Contact* root) {
 
 // Main section that executes
 int main() {
+    Utility util;
     Profile prof[5];
+    int size = 0;
+    util.loadProfiles(prof,size);
     bool loop = true;
     char choice;
     while(loop) {
