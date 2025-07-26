@@ -3,6 +3,9 @@
 #include <cstring>      // perform string operation
 #include <chrono>       // for chrono::millisecond() fn
 #include <thread>       // for this_thread::sleep_for() fn
+#include "../libs/json/include/json.hpp" // Adjust the path to include json.hpp
+
+using json = nlohmann::json;
 
 using namespace std;
 
@@ -78,14 +81,29 @@ class Contact {
 };
 
 // Object to store in JSON file
-class DataContainer {
+class Profile {
+    private:
+        string password;
     public: 
+        string username;
         Contact* contact;
         int count;
 
-        DataContainer(Contact* root, int count) {
+        Profile() {
+            contact = NULL;
+            count = 0;
+        }
+
+        Profile(Contact* root, int count) {
             contact = root;
             this->count = count;
+        }
+
+        bool login(string pwd) {
+            if(this->password.compare(pwd) == 0) {
+                return true;
+            }
+            return false;
         }
 };
 
@@ -219,16 +237,15 @@ class Service {
         }
 };
 
-// Main section that executes
-int main() {
-    Contact* root = NULL;
+// print menu section
+void menu(Contact* root) {
     Service serv = Service(root);
     char choice;
     bool loop = true;
     while(loop) {
         Utility::clearScreen();
         cout << "=== Address Book CLI ===" << endl;
-        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n0) Exit" << endl;
+        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n6) Save\n7) Save & Exit\n8) Exit without saving" << endl;
         cout << "Enter a choice : ";
         cin >> choice;
         switch (choice)
@@ -248,7 +265,13 @@ int main() {
         case '5':
             
             break;
-        case '0':
+        case '6':
+            
+            break;
+        case '7':
+
+            break;
+        case '8':
             loop = false;
             break;
         default:
@@ -256,6 +279,43 @@ int main() {
             cout << "Enter a choice : ";
             Utility::printWithAnimation("Invalid choice, please try again");
             break;
+        }
+    }
+}
+
+// Main section that executes
+int main() {
+    Profile prof[5];
+    bool loop = true;
+    char choice;
+    while(loop) {
+        Utility::clearScreen();
+        cout << "=== Address Book CLI by The G's ===" << endl;
+        cout << "1) Create Profile\n2) Login To Profile\n3) List Profile\n4) Merge Two Profile\n5) Exit\n";
+        cout << "Enter a choice : ";
+        cin >> choice;
+        switch (choice)
+        {
+            case '1':
+                
+                break;
+            case '2':
+                
+                break;
+            case '3':
+                
+                break;
+            case '4':
+
+                break;
+            case '5':
+                loop = false;
+                break;
+            default:
+                cout << "\x1b[A";           // move cursor up by one line
+                cout << "Enter a choice : ";
+                Utility::printWithAnimation("Invalid choice, please try again");
+                break;
         }
     }
     return 0;
