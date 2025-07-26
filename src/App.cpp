@@ -127,6 +127,13 @@ class Profile {
             count = 0;
         }
 
+        Profile(string username, string pwd) {
+            this->username = username;
+            this->password = pwd;
+            this->contact = NULL;
+            this->count = 0;
+        }
+
         Profile(string username, string pwd, Contact* root, int count) {
             this->username = username;
             this->password = pwd;
@@ -183,6 +190,7 @@ class Utility {
             //     cout << " " << flush;
             //     this_thread::sleep_for(chrono::milliseconds(100));
             // }
+            cout << endl;
         }
 
         static bool isNameValid(string name) {
@@ -222,6 +230,17 @@ class Utility {
         // Load profiles from JSON
         void loadProfiles(Profile profiles[], int& size) {
             ifstream ifs(FILE_PATH);
+            if (!ifs) {
+                cout << "Error opening file: " << FILE_PATH << endl;
+                size = 0;
+                return;
+            }
+            // Check if the file is empty
+            if (ifs.peek() == ifstream::traits_type::eof()) {
+                cout << "File is empty, no profiles to load." << endl;
+                size = 0;
+                return;
+            }
             json j_array;
             ifs >> j_array;
             
@@ -229,6 +248,42 @@ class Utility {
             for (int i = 0; i < size; i++) {
                 profiles[i].from_json(j_array[i]);
             }
+        }
+
+        static bool isUsernameOrPasswordValid(string usrpwd) {
+            for(int i = 0; i < usrpwd.length(); i++) {
+                if(usrpwd[i] == ' ') {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        static bool doesUsernameExists(string usrname, Profile root[], int size) {
+            for(int i = 0; i < size; i++) {
+                if(usrname.compare(root->username)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        static void printLine() {
+            cout << "----------------------------------" << endl;
+        }
+
+        static void printStar(string word) {
+            for(int i = 0; i < word.length(); i++) {
+                cout << "*";
+            }
+            cout << endl;
+        }
+
+        static void printSpace() {
+            for(int i = 0; i < 30; i++) {
+                cout << " ";
+            }
+            cout << endl;
         }
 };
 
@@ -333,6 +388,7 @@ void menu(Contact* root) {
         case '2':
             
             break;
+            
         case '3':
             
             break;
@@ -368,16 +424,67 @@ int main() {
     util.loadProfiles(prof,size);
     bool loop = true;
     char choice;
+    string usrname, password, repwd;
     while(loop) {
         Utility::clearScreen();
         cout << "=== Address Book CLI by The G's ===" << endl;
         cout << "1) Create Profile\n2) Login To Profile\n3) List Profile\n4) Merge Two Profile\n5) Exit\n";
         cout << "Enter a choice : ";
         cin >> choice;
+        // Ignore the newline character left in the input buffer
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         switch (choice)
         {
             case '1':
-                
+                Utility::clearScreen();
+                cout << "=== Create Profile ===" << endl;
+                cout << "Username    : ";
+                getline(cin,usrname);
+                if(!Utility::isUsernameOrPasswordValid(usrname) || usrname.compare("") == 0) {
+                    cout << "\x1b[A";
+                    Utility::printSpace();
+                    cout << "\x1b[A";
+                    cout << "\rUsername    : ";
+                    Utility::printWithAnimation("Username not accepted !!!");
+                    break;
+                }
+                else if(Utility::doesUsernameExists(usrname, prof, size)) {
+                    Utility::clearScreen();
+                    cout << "=== Create Profile ===" << endl;
+                    cout << "Username    : ";
+                    Utility::printWithAnimation("Username already taken !!!");
+                    break;
+                }
+                cout << "Password    : ";
+                getline(cin,password);
+                if(!Utility::isUsernameOrPasswordValid(password)) {
+                    cout << "\x1b[A";
+                    Utility::printSpace();
+                    cout << "Password    : ";
+                    Utility::printWithAnimation("Password not accepted !!!");
+                }
+                cout << "\x1b[A";           // move cursor up by one line
+                cout << "Password    : " ;
+                Utility::printStar(password);
+                cout << "Re-password : ";
+                getline(cin,repwd);
+                if(password.compare(repwd) != 0) {
+                    cout << "\x1b[A";           // move cursor up by one line
+                    Utility::printSpace();
+                    cout << "\x1b[A";  
+                    cout << "Re-password : ";
+                    Utility::printWithAnimation("Password does not match !!!");
+                    break;
+                }
+                cout << "\x1b[A";           // move cursor up by one line
+                cout << "Re-password : " ;
+                Utility::printStar(password);
+                Utility::printLine();
+                Utility::printWithAnimation(". . .");
+                cout << "\x1b[A";           // move cursor up by one line
+                cout << "       \r";
+                prof[size++] = Profile(usrname, password);
+                Utility::printWithAnimation("User created");
                 break;
             case '2':
                 
