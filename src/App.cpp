@@ -5,7 +5,10 @@
 #include <thread>       // for this_thread::sleep_for() fn
 #include <fstream>      // for file handling
 #include <limits>
-#include "../libs/json/include/nlohmann/json.hpp" // Adjust the path to include json.hpp
+#include <memory>
+#include <vector>
+
+#include "../libs/json/include/nlohmann/json.hpp"
 
 using json = nlohmann::json;
 
@@ -21,7 +24,6 @@ class Contact {
     public:
         Contact* left;
         Contact* right;
-        // static int count;       // stores count of contacts
         int height;             // for storing height of current node (for AVL implementation)
 
         Contact(string name, string mobile, string address, string email) {
@@ -32,10 +34,12 @@ class Contact {
             this->left = NULL;
             this->right = NULL;
             this->height = 1;
-            // this->count = 0;
         }
 
-        // Contact()
+        // ~Contact() {
+        //     delete left;
+        //     delete right;
+        // }
 
         void display() {
             cout << "1. Full Name : " << this->name << endl;
@@ -79,22 +83,27 @@ class Contact {
             return this->email;
         }
 
-        int compareTo(Contact* c2) {
+        int compareTo(Contact* c2) const {
             return this->name.compare(c2->name);
         }
 
-        int compareTo(string name) {
+        int compareTo(string name) const {
             return this->name.compare(name);
         }
 
         bool compareToUtil(string test) {
-            return this->name.substr(0,test.length()).compare(test);
+            if (test.length() > this->name.length()) {
+                return false;
+            }
+            return this->name.substr(0, test.length()).compare(test) == 0;
         }
 
         // Serialize a contact (including subtree)
         static json serialize(Contact* node) {
-            if (!node) return nullptr;
-            
+            if (!node) {
+                return nullptr;
+            }
+
             json j;
             j["name"] = node->name;
             j["mobile"] = node->mobile;
@@ -109,8 +118,10 @@ class Contact {
 
         // Deserialize a contact (including subtree)
         static Contact* deserialize(const json& j) {
-            if (j.is_null()) return nullptr;
-            
+            if (j.is_null()) {
+                return nullptr;
+            }
+
             Contact* node = new Contact(
                 j["name"].get<string>(),
                 j["mobile"].get<string>(),
@@ -125,34 +136,36 @@ class Contact {
         }
 };
 
-// Object to store in JSON file
+// For multiple Profile and saving in JSON file
 class Profile {
     public: 
         string username;
         string password;
-        Contact* contact;
-        // int count;
+        Contact* contact; // root of AVL tree
 
         Profile() {
             contact = NULL;
-            // count = 0;
         }
 
+        // Creating new Profile
         Profile(string username, string pwd) {
             this->username = username;
             this->password = pwd;
             this->contact = NULL;
-            // this->count = 0;
         }
 
-        Profile(string username, string pwd, Contact* root) { // , int count
+        // For JSON file reading 
+        Profile(string username, string pwd, Contact* root) { 
             this->username = username;
             this->password = pwd;
             contact = root;
-            // this->count = count;
         }
 
-        bool login(string pwd) {
+        ~Profile() {
+            delete contact;
+        }
+
+        bool login(string pwd) const {
             if(this->password.compare(pwd) == 0) {
                 return true;
             }
@@ -163,23 +176,27 @@ class Profile {
             j = {
                 {"username", username},
                 {"password", password},
-                {"contact", Contact::serialize(contact)} // ,
-                // {"count", count}
+                {"contact", Contact::serialize(contact)}
             };
         }
 
         void from_json(const json& j) {
             username = j["username"];
             password = j["password"];
+            // Existing contact tree is deleted
+            if (contact) {
+                delete contact;
+                contact = nullptr;
+            }
+            // deserializing a new Contact
             contact = Contact::deserialize(j["contact"]);
-            // count = j["count"];
         }
 };
 
 // For performing utility operations like clear screen, load and save contact, etc.
 class Utility {
     private:
-        string FILE_PATH = "../addressbook.json";
+        string FILE_PATH = "../../addressbook.json";
     public: 
         static void clearScreen() {
             // Check the operating system
@@ -193,20 +210,18 @@ class Utility {
         static void printWithAnimation(string print) {
             for(int i = 0; i < print.length(); i++) {
                 cout << print[i] << flush;
-                this_thread::sleep_for(chrono::milliseconds(100));
+                this_thread::sleep_for(chrono::milliseconds(50));
             }
             this_thread::sleep_for(chrono::milliseconds(200));
-            // cout << "\r" ;               // "\r" - takes the cursor to the beginning of the current line
-            // for(int i = 0; i < print.length(); i++) {
-            //     cout << " " << flush;
-            //     this_thread::sleep_for(chrono::milliseconds(100));
-            // }
             cout << endl;
         }
 
         static bool isNameValid(string name) {
-            for(string::size_type i = 0; i < name.length(); i++) {
-                if(name[i] != ' ' && (name[i] < 'a' || name[i] > 'z') && (name[i] < 'A' || name[i] > 'Z')) {
+            if (name.empty()) {
+                return false;
+            }
+            for(int i = 0; i < name.length(); i++) {
+                if(!isalpha(name[i]) || !isspace(name[i])){ 
                     return false;
                 }
             }
@@ -218,7 +233,7 @@ class Utility {
             if(email.length() <= validate.length()) {
                 return false;
             }
-            if(email.substr(email.length(), validate.length()).compare(validate) != 0) {
+            if(email.substr(email.length() - validate.length()).compare(validate) != 0) {
                 return false;
             }
             return true;
@@ -229,7 +244,7 @@ class Utility {
                 return false;
             }
             for(int i = 0; i < 10; i++) {
-                if(mobile[i] < '0' || mobile[i] > '9') {
+                if(!isdigit(mobile[i])) {
                     return false;
                 }
             }
@@ -237,54 +252,84 @@ class Utility {
         }
 
         // Save entire profile array to json
-        void saveProfiles(Profile profiles[], int size) {
+        void saveProfiles(const vector<Profile*>& profiles) {
             json j_array = json::array();
             
-            for (int i = 0; i < size; i++) {
-                json j_profile;
-                profiles[i].to_json(j_profile);
-                j_array.push_back(j_profile);
+            for (const auto& profile_ptr : profiles) {
+                if (profile_ptr) { // Ensure the pointer is not null
+                    json j_profile;
+                    profile_ptr->to_json(j_profile);
+                    j_array.push_back(j_profile);
+                }
             }
             
             ofstream ofs(FILE_PATH);
+            if (!ofs.is_open()) {
+                cerr << "Error: Could not open file for writing: " << FILE_PATH << endl;
+                return;
+            }
             ofs << j_array.dump(4);  // Pretty print with indentation
+            ofs.close();
         }
 
         // Load profiles from JSON
-        void loadProfiles(Profile profiles[], int& size) {
+        void loadProfiles(vector<Profile*>& profiles) {
             ifstream ifs(FILE_PATH);
-            if (!ifs) {
-                cout << "Error opening file: " << FILE_PATH << endl;
-                size = 0;
+            if (!ifs.is_open()) {
+                cout << "File not found or error opening file: " << FILE_PATH << ". Starting with no profiles." << endl;
+                profiles.clear(); // Ensure vector is empty if file doesn't exist
                 return;
             }
+            
             // Check if the file is empty
             if (ifs.peek() == ifstream::traits_type::eof()) {
                 cout << "File is empty, no profiles to load." << endl;
-                size = 0;
+                profiles.clear();
+                ifs.close();
                 return;
             }
+
             json j_array;
-            ifs >> j_array;
-            
-            size = j_array.size();
-            for (int i = 0; i < size; i++) {
-                profiles[i].from_json(j_array[i]);
+            try {
+                ifs >> j_array;
+            } catch (const json::parse_error& e) {
+                cerr << "JSON parse error: " << e.what() << endl;
+                cout << "Corrupted file, starting with no profiles." << endl;
+                profiles.clear();
+                ifs.close();
+                return;
             }
+            ifs.close();
+
+            profiles.clear(); // Clear existing profiles before loading new ones
+            for (const auto& j_profile : j_array) {
+                Profile* new_profile = new Profile(); // Create a new Profile object
+                try {
+                    new_profile->from_json(j_profile);
+                    profiles.push_back(new_profile);
+                } catch (const json::exception& e) {
+                    cerr << "Error deserializing profile: " << e.what() << ". Skipping this profile." << endl;
+                    delete new_profile; // Clean up if deserialization fails
+                }
+            }
+            cout << profiles.size() << " profiles loaded." << endl;
         }
 
         static bool isUsernameOrPasswordValid(string usrpwd) {
+            if (usrpwd.empty()) {
+                return false;
+            }
             for(int i = 0; i < usrpwd.length(); i++) {
-                if(usrpwd[i] == ' ') {
+                if(isspace(usrpwd[i])) {
                     return false;
                 }
             }
             return true;
         }
         
-        static bool doesUsernameExists(string usrname, Profile root[], int size) {
-            for(int i = 0; i <= size; i++) {
-                if(usrname.compare(root->username)) {
+        static bool doesUsernameExists(string usrname, const vector<Profile*>& profiles) {
+            for(const auto& profile_ptr : profiles) {
+                if (profile_ptr && profile_ptr->username.compare(usrname) == 0) {
                     return true;
                 }
             }
@@ -309,18 +354,24 @@ class Utility {
             cout << endl;
         }
 
-        int getProfileIndex(Profile prof[], int size, string username) {
-            for(int i = 0; i <= size; i++) {
-                if(prof[i].username.compare(username) == 0) {
-                    return i;
+        int getProfileIndex(const vector<Profile*>& profiles, string username) {
+            for(size_t i = 0; i < profiles.size(); ++i) {
+                if(profiles[i] && profiles[i]->username.compare(username) == 0) {
+                    return static_cast<int>(i);
                 }
             }
             return -1;
         }
 
-        void listProfile(Profile prof[], int size) {
-            for(int i = 0; i < size; i++) {
-                cout << i+1 << ". " << prof[i].username << endl; 
+        void listProfile(const vector<Profile*>& profiles) {
+            if (profiles.empty()) {
+                cout << "No profiles available." << endl;
+                return;
+            }
+            for(size_t i = 0; i < profiles.size(); ++i) {
+                if (profiles[i]) {
+                    cout << i+1 << ". " << profiles[i]->username << endl; 
+                }
             }
         }
 
@@ -335,36 +386,36 @@ class Utility {
 class Service {
     private: 
         Utility util;
-        Contact* root;
+        Contact* &root;
 
-        void display(int t, string name = NULL, string mobile = NULL, string address = NULL, string email = NULL) {
+        void display(int t, string name = "", string mobile = "", string address = "", string email = "") {             // t - attempt
             Utility::clearScreen();
             cout << "=== Add Contact ===\n";
-            if(name.compare(NULL) == 0) {
+            if(name.empty()) {
                 cout << "Full Name : " ;
                 Utility::printWithAnimation("Name is not valid !!\tTry ");
                 cout << t << " / 3";
                 this_thread::sleep_for(chrono::milliseconds(500));
             }
-            else if(mobile.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
+            else if(mobile.empty()) {
+                cout << "Full Name : " << name << endl;
                 cout << "Mobile    : ";
                 Utility::printWithAnimation("Number is not valid !!\tTry ");
                 cout << t << " / 3";
                 this_thread::sleep_for(chrono::milliseconds(500));
             }
-            else if(address.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
-                cout << "Mobile    : " << mobile;
+            else if(address.empty()) {
+                cout << "Full Name : " << name << endl;
+                cout << "Mobile    : " << mobile << endl;
                 cout << "Address   : ";
                 Utility::printWithAnimation("Address is not valid !!\tTry ");
                 cout << t << " / 3";
                 this_thread::sleep_for(chrono::milliseconds(500));
             }
-            else if(email.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
-                cout << "Mobile    : " << mobile;
-                cout << "Address   : " << address;
+            else if(email.empty()) {
+                cout << "Full Name : " << name << endl;
+                cout << "Mobile    : " << mobile << endl;
+                cout << "Address   : " << address << endl;
                 cout << "Email     : ";
                 Utility::printWithAnimation("Email is not valid !!\tTry ");
                 cout << t << " / 3";
@@ -372,22 +423,22 @@ class Service {
             }
             Utility::clearScreen();
             cout << "=== Add Contact ===\n";
-            if(name.compare(NULL) == 0) {
+            if(name.compare("") == 0) {
                 cout << "Full Name : " ;
             }
-            else if(mobile.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
+            else if(mobile.empty()) {
+                cout << "Full Name : " << name << endl;
                 cout << "Mobile    : ";
             }
-            else if(address.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
-                cout << "Mobile    : " << mobile;
+            else if(address.empty()) {
+                cout << "Full Name : " << name << endl;
+                cout << "Mobile    : " << mobile << endl;
                 cout << "Address   : ";
             }
-            else if(email.compare(NULL) == 0) {
-                cout << "Full Name : " << name;
-                cout << "Mobile    : " << mobile;
-                cout << "Address   : " << address;
+            else if(email.empty()) {
+                cout << "Full Name : " << name << endl;
+                cout << "Mobile    : " << mobile << endl;
+                cout << "Address   : " << address << endl;
                 cout << "Email     : ";
             }
         }
@@ -434,7 +485,7 @@ class Service {
             return height(curr->left) - height(curr->right);
         }
 
-        Contact* addContactUtil(Contact* &current, Contact* newContact) {
+        Contact* addContactUtil(Contact* current, Contact* newContact) {
             if(current == NULL) {
                 return newContact;
             }
@@ -445,6 +496,7 @@ class Service {
                 current->right = addContactUtil(current->right, newContact);
             }
             else {
+                delete newContact;
                 return current;
             }
 
@@ -510,7 +562,75 @@ class Service {
             listContactUtil(current->right);
         }
 
-        void editContactUtil(Contact* curr) {
+        Contact* getMinContact(Contact* current) {
+            Contact* ptr = current;
+
+            while(ptr->left != NULL) {
+                ptr = ptr->left;
+            }
+            return ptr;
+        }
+
+        Contact* deleteContactUtil(Contact* curr, Contact* del) {
+            if(curr->compareTo(del) > 0) {
+                curr->left = deleteContactUtil(curr->left, del);
+            }
+            else if(curr->compareTo(del) < 0) {
+                curr->right = deleteContactUtil(curr->right, del);
+            }
+            else {
+                if(curr->left == NULL || curr->right == NULL) {
+                    Contact* temp = NULL;
+                    if(temp == curr->left) {
+                        temp = curr->right;
+                    } else {
+                        temp = curr->left;
+                    }
+                    if(temp == NULL) {
+                        temp = curr;
+                        curr = NULL;
+                    } else {
+                        *curr = *temp;
+                    }
+                } else {
+                    Contact* temp = getMinContact(curr->right);
+
+                    curr->setData(temp);
+
+                    curr->right = deleteContactUtil(curr->right, temp);
+                }
+            }
+
+            if(curr == NULL) {
+                return curr;
+            }
+
+            curr->height = (height(curr->left) > height(curr->right) ? height(curr->left) : height(curr->right)) + 1;
+
+            int bf = getBalance(curr);
+
+            if(bf > 1 && getBalance(curr->left) >= 0) {
+                return rightRotate(curr);
+            }
+
+            if(bf > 1 && getBalance(curr->left) < 0) {
+                curr->left = leftRotate(curr->left);
+                return rightRotate(curr);
+            }
+
+            if(bf < -1 && getBalance(curr->right) <= 0) {
+                return leftRotate(curr);
+            }
+
+            if(bf < -1 && getBalance(curr->right) > 0) {
+                curr->right = rightRotate(curr->right);
+                return leftRotate(curr);
+            }
+
+            return curr;
+        }
+
+        void editContactUtil(Contact* &curr) {
             Utility::clearScreen();
             cout << "=== Edit Contact ===";
             curr->display();
@@ -598,82 +718,14 @@ class Service {
             }
         }
 
-        Contact* getMinContact(Contact* current) {
-            Contact* ptr = current;
-
-            while(ptr->left != NULL) {
-                ptr = ptr->left;
-            }
-            return ptr;
-        }
-
-        Contact* deleteContactUtil(Contact* &curr, Contact* del) {
-            if(curr->compareTo(del) > 0) {
-                curr->left = deleteContactUtil(curr->left, del);
-            }
-            else if(curr->compareTo(del) < 0) {
-                curr->right = deleteContactUtil(curr->right, del);
-            }
-            else {
-                if(curr->left == NULL || curr->right == NULL) {
-                    Contact* temp = NULL;
-                    if(temp == curr->left) {
-                        temp = curr->right;
-                    } else {
-                        temp = curr->left;
-                    }
-                    if(temp == NULL) {
-                        curr = NULL;
-                    } else {
-                        curr = temp;
-                    }
-                } else {
-                    Contact* temp = getMinContact(curr->right);
-
-                    curr->setData(temp);
-
-                    curr->right = deleteContactUtil(curr->right, temp);
-                }
-            }
-
-            if(curr == NULL) {
-                return curr;
-            }
-
-            curr->height = (height(curr->left) > height(curr->right) ? height(curr->left) : height(curr->right)) + 1;
-
-            int bf = getBalance(curr);
-
-            if(bf > 1 && getBalance(curr->left) >= 0) {
-                return rightRotate(curr);
-            }
-
-            if(bf > 1 && getBalance(curr->left) < 0) {
-                curr->left = leftRotate(curr->left);
-                return rightRotate(curr);
-            }
-
-            if(bf < -1 && getBalance(curr->right) <= 0) {
-                return leftRotate(curr);
-            }
-
-            if(bf < -1 && getBalance(curr->right) > 0) {
-                curr->right = rightRotate(curr->right);
-                return leftRotate(curr);
-            }
-
-            return curr;
-        }
-
         public:
-        Service(Contact* persons) {
-            root = persons;
-        }        
+
+        Service(Contact*& persons) : root(persons) {}     
 
         void addContact() {
-            string name, address, email;
-            string mobile;
+            string name, address, email, mobile;
             int t = 1;
+            const int MAX_ATTEMPTS = 3;
 
             Utility::clearScreen();
             cout << "=== Add Contact ===" << endl;
@@ -682,13 +734,16 @@ class Service {
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             do {
                 getline(cin, name);
-                // cout << "Haha1" << endl;
                 if(!Utility::isNameValid(name)) {
-                    // cout << "Haha2" << endl;
                     display(t++);
+                    if (t > MAX_ATTEMPTS) {
+                        cout << "Too many invalid attempts. Returning to menu." << endl;
+                        return;
+                    }
+                } else {
+                    break;
                 }
-                // cout << "Haha3" << endl;
-            } while(!Utility::isNameValid(name));
+            } while(true);
             t = 1;
 
             Contact* exists = searchContactUtil(root, name);
@@ -703,28 +758,47 @@ class Service {
                 getline(cin, mobile);
                 if(!Utility::isMobileValid(mobile)) {
                     display(t++,name);
+                    if (t > MAX_ATTEMPTS) {
+                        cout << "Too many invalid attempts. Returning to menu." << endl;
+                        return;
+                    }
+                } else {
+                    break;
                 }
-            } while(!Utility::isMobileValid(mobile));
+            } while(true);
             t = 1;
             
             cout << "Address   : ";
             do {
                 getline(cin, address);
-                if(address.compare("") == 0) {
+                if(address.empty()) {
                     display(t++,name, mobile);
+                    if (t > MAX_ATTEMPTS) {
+                        cout << "Too many invalid attempts. Returning to menu." << endl;
+                        return;
+                    }
+                } else {
+                    break;
                 }
-            } while(address.compare("") == 0);
+            } while(true);
             t = 1;
 
             cout << "Email     : ";
             do {
                 getline(cin, email);
-                if(util.isEmailValid(email)) {
+                if(!util.isEmailValid(email)) {
                     display(t++,name, mobile, address);
+                    if (t > MAX_ATTEMPTS) {
+                        cout << "Too many invalid attempts. Returning to menu." << endl;
+                        return;
+                    }
+                } else {
+                    break;
                 }
-            } while(util.isEmailValid(email));
+            } while(true);
 
-            root = addContactUtil(root, new Contact(name, mobile, address, email));
+            Contact* newC = new Contact(name, mobile, address, email);
+            root = addContactUtil(root, newC);
             Utility::printLine();
             Utility::printWithAnimation("=== New Contact Added ===");
             Utility::pressEnterToContinue();
@@ -734,28 +808,34 @@ class Service {
             Utility::clearScreen();
             cout << "=== Search Contact ===\n";
 
-            cout << "Full Name : ";
-            cin.clear();
+            cout << "Enter Full or Partial name : ";
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             string name;
             getline(cin, name);
             Utility::clearScreen();
             cout << "=== Searched Contact ===\n";
             searchContactUtilA(root, name);
+            Utility::pressEnterToContinue();
         }
         
         void listContact() {
             Utility::clearScreen();
             cout << "=== List of Contact ===\n";
-            listContactUtil(root);
+            if (root == NULL) {
+                cout << "No contacts available." << endl;
+            } else {
+                listContactUtil(root);
+            }
+            Utility::pressEnterToContinue();
             
         }
 
         void editContact() {
             Utility::clearScreen();
             cout << "=== Edit Contact ===" << endl;
-            cout << "Full Name: ";
+            cout << "Enter Full Name: ";
             string name;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             getline(cin, name);
 
             Contact* ptr = searchContactUtil(root, name);
@@ -770,8 +850,9 @@ class Service {
         void deleteContact() {
             Utility::clearScreen();
             cout << "=== Delete Contact ===" << endl;
-            cout << "Full Name : ";
+            cout << "Enter Full Name : ";
             string name;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             getline(cin, name);
             Contact* ptr = searchContactUtil(root, name);
             if(ptr != NULL) {
@@ -782,22 +863,25 @@ class Service {
             Utility::pressEnterToContinue();
         }
         
+        Contact* getRoot() const { 
+            return root; 
+        }
+
 };
 
 // print menu section
-Profile menu(Profile current) {
-    Contact* root = current.contact;
-    Profile ret = Profile(current.username, current.password, root);
-    Service serv = Service(root);
+void menu(Profile* current) {
+    Service serv = Service(current->contact);
     char choice;
     bool loop = true;
     while(loop) {
         Utility::clearScreen();
-        cout << "User : " << current.username << endl;
+        cout << "User : " << current->username << endl;
         cout << "=== Address Book CLI ===" << endl;
-        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n6) Save\n7) Save & Exit\n8) Exit without saving" << endl;
+        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n6) Log Out\n" << endl;
         cout << "Enter a choice : ";
         cin >> choice;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
         switch (choice)
         {
             case '1':
@@ -805,32 +889,20 @@ Profile menu(Profile current) {
                 break;
             case '2':
                 serv.listContact();
-                Utility::pressEnterToContinue();
                 break;
             case '3':
                 serv.searchContact();
-                Utility::pressEnterToContinue();
                 break;
             case '4':
                 serv.editContact();
-                Utility::pressEnterToContinue();
                 break;
             case '5':
                 serv.deleteContact();
-                Utility::pressEnterToContinue();
                 break;
             case '6':
-                ret = Profile(current.username, current.password, root);
-                Utility::pressEnterToContinue();
-                break;
-            case '7':
-                ret = Profile(current.username, current.password, root);
                 loop = false;
                 Utility::printLine();
-                break;
-            case '8':
-                loop = false;
-                Utility::printLine();
+                Utility::printWithAnimation("Logging out...");
                 break;
             default:
                 cout << "\x1b[A";           // move cursor up by one line
@@ -840,19 +912,20 @@ Profile menu(Profile current) {
         }
     }
     Utility::pressEnterToContinue();
-    return ret;
 }
 
 // Main section that executes
 int main() {
     Utility util;
-    Profile prof[5];
-    int size = 0;
-    util.loadProfiles(prof,size);
+    // Use std::vector for dynamic management of profiles
+    vector<Profile*> profiles; 
+    const int MAX_PROFILES = 10; // Define a reasonable max for the vector if needed, though vector handles growth
+
+    util.loadProfiles(profiles);
     bool loop = true;
     char choice;
     string usrname, password, repwd;
-    int curr;
+    Profile* current_profile; 
     while(loop) {
         Utility::clearScreen();
         cout << "=== Address Book CLI by The G's ===" << endl;
@@ -867,8 +940,9 @@ int main() {
                 Utility::clearScreen();
                 cout << "=== Create Profile ===" << endl;
                 cout << "Username    : ";
+                
                 getline(cin,usrname);
-                if(!Utility::isUsernameOrPasswordValid(usrname) || usrname.compare("") == 0) {
+                if(!Utility::isUsernameOrPasswordValid(usrname) || usrname.empty()) {
                     cout << "\x1b[A";
                     Utility::printSpace();
                     cout << "\x1b[A";
@@ -876,7 +950,7 @@ int main() {
                     Utility::printWithAnimation("Username not accepted !!!");
                     break;
                 }
-                else if(!Utility::doesUsernameExists(usrname, prof, size)) {
+                else if(!Utility::doesUsernameExists(usrname, profiles)) {
                     Utility::clearScreen();
                     cout << "=== Create Profile ===" << endl;
                     cout << "Username    : ";
@@ -884,6 +958,7 @@ int main() {
                     break;
                 }
                 cout << "Password    : ";
+                
                 getline(cin,password);
                 if(!Utility::isUsernameOrPasswordValid(password)) {
                     cout << "\x1b[A";
@@ -911,15 +986,17 @@ int main() {
                 Utility::printWithAnimation(". . .");
                 cout << "\x1b[A";           // move cursor up by one line
                 cout << "       \r";
-                prof[size++] = Profile(usrname, password);
+                // Add new profile to the vector
+                profiles.push_back(new Profile(usrname, password));
                 Utility::printWithAnimation("User created");
+                Utility::pressEnterToContinue();
                 break;
             case '2':
                 Utility::clearScreen();
                 cout << "=== Login Profile ===" << endl;
                 cout << "Username : ";
                 getline(cin, usrname);
-                curr = util.getProfileIndex(prof, size, usrname);
+                int curr = util.getProfileIndex(profiles, usrname);
                 if(curr == -1) {
                     cout << "\x1b[A";
                     Utility::printSpace();
@@ -928,20 +1005,22 @@ int main() {
                     break;
                 }
                 cout << "Password : ";
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 getline(cin, password);
-                if(!prof[curr].login(password)) {
+                current_profile = profiles[curr];
+                if(!current_profile->login(password)) {
                     cout << "\x1b[A";
                     Utility::printSpace();
                     cout << "\rPassword : ";
                     Utility::printWithAnimation("Password incorrect");
                     break;
                 }
-                prof[curr] = menu(prof[curr]);
+                menu(current_profile);
                 break;
             case '3':
                 Utility::clearScreen();
                 cout << "=== List of Contact ===" << endl;
-                util.listProfile(prof, size);
+                util.listProfile(profiles);
                 Utility::printLine();
                 Utility::pressEnterToContinue();
                 break;
@@ -950,7 +1029,7 @@ int main() {
                 break;
             case '5':
                 loop = false;
-                util.saveProfiles(prof, size);
+                util.saveProfiles(profiles);
                 break;
             default:
                 cout << "\x1b[A";           // move cursor up by one line
