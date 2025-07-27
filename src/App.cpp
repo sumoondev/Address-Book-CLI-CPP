@@ -216,16 +216,16 @@ class Utility {
             cout << endl;
         }
 
-        static bool isNameValid(string name) {
+        static bool isNameValid(const string& name) {
             if (name.empty()) {
                 return false;
             }
             for(int i = 0; i < name.length(); i++) {
-                if(!isalpha(name[i]) || !isspace(name[i])){ 
-                    return false;
+                if(isalpha(name[i]) || isspace(name[i])){ 
+                    return true;
                 }
             }
-            return true;
+            return false;
         }
 
         bool isEmailValid(string email) {
@@ -730,8 +730,8 @@ class Service {
             Utility::clearScreen();
             cout << "=== Add Contact ===" << endl;
             cout << "Full Name : ";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // cin.clear();
+            // cin.ignore(numeric_limits<streamsize>::max(), '\n');
             do {
                 getline(cin, name);
                 if(!Utility::isNameValid(name)) {
@@ -926,6 +926,7 @@ int main() {
     char choice;
     string usrname, password, repwd;
     Profile* current_profile; 
+    int curr;
     while(loop) {
         Utility::clearScreen();
         cout << "=== Address Book CLI by The G's ===" << endl;
@@ -950,7 +951,7 @@ int main() {
                     Utility::printWithAnimation("Username not accepted !!!");
                     break;
                 }
-                else if(!Utility::doesUsernameExists(usrname, profiles)) {
+                else if(Utility::doesUsernameExists(usrname, profiles)) {
                     Utility::clearScreen();
                     cout << "=== Create Profile ===" << endl;
                     cout << "Username    : ";
@@ -996,7 +997,7 @@ int main() {
                 cout << "=== Login Profile ===" << endl;
                 cout << "Username : ";
                 getline(cin, usrname);
-                int curr = util.getProfileIndex(profiles, usrname);
+                curr = util.getProfileIndex(profiles, usrname);
                 if(curr == -1) {
                     cout << "\x1b[A";
                     Utility::printSpace();
@@ -1005,7 +1006,7 @@ int main() {
                     break;
                 }
                 cout << "Password : ";
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                // cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 getline(cin, password);
                 current_profile = profiles[curr];
                 if(!current_profile->login(password)) {
