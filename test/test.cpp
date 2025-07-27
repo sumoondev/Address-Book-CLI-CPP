@@ -27,6 +27,17 @@ static void printWithAnimation(string print) {
             //     this_thread::sleep_for(chrono::milliseconds(100));
             // }
         }
+bool isMobileValid(string mobile) {
+            if(mobile.length() != 10) {
+                return false;
+            }
+            for(int i = 0; i < 10; i++) {
+                if(mobile[i] < '0' || mobile[i] > '9') {
+                    return false;
+                }
+            }
+            return true;
+        }
 int main() {
     // cout << "This is some text." << endl;
     // cout << "Clearing the screen..." << endl;
@@ -37,42 +48,46 @@ int main() {
     // cin >> getc;
 
     // printWithAnimation("I n v a l i d  ! ! !");
+
+    // char choice;
+    // bool loop = true;
+    // while(loop) {
+    //     clearScreen();
+    //     cout << "=== Address Book CLI ===" << endl;
+    //     cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n0) Exit" << endl;
+    //     cout << "Enter a choice : ";
+    //     cin >> choice;
+    //     switch (choice)
+    //     {
+    //     case '1':
+            
+    //         break;
+    //     case '2':
+            
+    //         break;
+    //     case '3':
+            
+    //         break;
+    //     case '4':
+
+    //         break;
+    //     case '5':
+            
+    //         break;
+    //     case '0':
+    //         loop = false;
+    //         break;
+    //     default:
+    //         cout << "\x1b[A"; 
+    //         cout << "Enter a choice : ";
+    //         printWithAnimation("Invalid choice, please try again!!!");
+    //         break;
+    //     }
+    // }
+    // 
+
     
-    char choice;
-    bool loop = true;
-    while(loop) {
-        clearScreen();
-        cout << "=== Address Book CLI ===" << endl;
-        cout << "1) Add Contact\n2) List All Contacts\n3) Search Contacts\n4) Edit Contact\n5) Delete Contact\n0) Exit" << endl;
-        cout << "Enter a choice : ";
-        cin >> choice;
-        switch (choice)
-        {
-        case '1':
-            
-            break;
-        case '2':
-            
-            break;
-        case '3':
-            
-            break;
-        case '4':
-
-            break;
-        case '5':
-            
-            break;
-        case '0':
-            loop = false;
-            break;
-        default:
-            cout << "\x1b[A"; 
-            cout << "Enter a choice : ";
-            printWithAnimation("Invalid choice, please try again!!!");
-            break;
-        }
-    }
-
+    cout << isMobileValid("1234567890") << endl;
+    
     return 0;
 }
