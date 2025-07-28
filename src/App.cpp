@@ -5,6 +5,7 @@
 #include <thread>       // for this_thread::sleep_for() fn
 #include <fstream>      // for file handling
 #include <limits>
+#include <climits>
 #include <memory>
 #include <vector>
 
@@ -197,6 +198,43 @@ class Profile {
 class Utility {
     private:
         string FILE_PATH = "../../addressbook.json";
+    
+        // Merge sort utility
+        void mergeSortUtil(vector<Profile*>& profiles, int left, int mid, int right) {
+            int n1 = mid - left + 1;
+            int n2 = right - mid;
+            vector<Profile*> L(n1);
+            vector<Profile*> R(n2);
+            for (int i = 0; i < n1; i++) {
+                int a = left + i;
+                L[i] = profiles[left + i];
+            }
+            for (int j = 0; j < n2; j++) {
+                R[j] = profiles[mid + 1 + j];
+            }
+            int i = 0, j = 0, k = left;
+            while (i < n1 && j < n2) {
+                if (L[i]->username <= R[j]->username) {
+                    profiles[k] = L[i];
+                    i++;
+                } else {
+                    profiles[k] = R[j];
+                    j++;
+                }
+                k++;
+            }
+            while (i < n1) {
+                profiles[k] = L[i];
+                i++;
+                k++;
+            }
+            while (j < n2) {
+                profiles[k] = R[j];
+                j++;
+                k++;
+            }
+        }
+        
     public: 
         static void clearScreen() {
             // Check the operating system
@@ -328,8 +366,13 @@ class Utility {
         }
         
         static bool doesUsernameExists(string usrname, const vector<Profile*>& profiles) {
-            for(const auto& profile_ptr : profiles) {
-                if (profile_ptr && profile_ptr->username.compare(usrname) == 0) {
+            // for(const auto& profile_ptr : profiles) {
+            //     if (profile_ptr && profile_ptr->username.compare(usrname) == 0) {
+            //         return true;
+            //     }
+            // }
+            for(int i = 0; i < profiles.size(); i++) {
+                if(profiles[i]->username == usrname) {
                     return true;
                 }
             }
@@ -379,6 +422,16 @@ class Utility {
             string s;
             cout << "Press Enter to continue ...";
             getline(cin,s);
+        }
+
+        // Merge Sort function
+        void mergeSort(vector<Profile*>& profiles, int left, int right) {
+            if (left < right) {
+                int mid = left + (right - left) / 2;
+                mergeSort(profiles, left, mid);
+                mergeSort(profiles, mid + 1, right);
+                mergeSortUtil(profiles, left, mid, right);
+            }
         }
 };
 
@@ -919,7 +972,7 @@ int main() {
     Utility util;
     // Use std::vector for dynamic management of profiles
     vector<Profile*> profiles; 
-    const int MAX_PROFILES = 10; // Define a reasonable max for the vector if needed, though vector handles growth
+    const int MAX_PROFILES = 100; // Define a reasonable max for the vector if needed, though vector handles growth
 
     util.loadProfiles(profiles);
     bool loop = true;
@@ -989,6 +1042,7 @@ int main() {
                 cout << "       \r";
                 // Add new profile to the vector
                 profiles.push_back(new Profile(usrname, password));
+                util.mergeSort(profiles, 0, profiles.size()-1);
                 Utility::printWithAnimation("User created");
                 Utility::pressEnterToContinue();
                 break;
@@ -1026,7 +1080,7 @@ int main() {
                 Utility::pressEnterToContinue();
                 break;
             case '4':
-                // Merge code 
+                // Merge code left to do
                 break;
             case '5':
                 loop = false;
