@@ -528,7 +528,7 @@ class Service {
 
             y->height = (height(y->left) > height(y->right) ? height(y->left) : height(y->right)) + 1;
 
-            return x;
+            return y;
         }
 
         int getBalance(Contact* curr) {
