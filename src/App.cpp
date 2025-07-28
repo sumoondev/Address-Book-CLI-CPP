@@ -687,6 +687,7 @@ class Service {
             Utility::clearScreen();
             cout << "=== Edit Contact ===";
             curr->display();
+            cout << "5. Exit"<<endl;
             cout << "\nWhat to Edit(eg : 1, 2, 3, 4, 5) : ";
             char choice;
             cin >> choice;
@@ -734,6 +735,7 @@ class Service {
                     cout << "Mobile : " << curr->getMobile() << endl;
                     cout << "Email : " << curr->getEmail() << endl;
                     cout << "Address : ";
+                    getline(cin, address);
                     if(address.compare("") == 0) {
                         cout << "Address empty invalid!!!\nAddress Unchanged";
                     } else {
@@ -761,9 +763,12 @@ class Service {
                     }
                     Utility::pressEnterToContinue();
                     break;
+                case '5':
+                    break;
                 default:
                     Utility::clearScreen();
                     curr->display();
+                    cout << "5. Exit"<<endl;
                     cout << "\nWhat to Edit(eg : 1, 2, 3, 4, 5) : ";
                     Utility::printWithAnimation("Choice Invalid");
                     Utility::pressEnterToContinue();
@@ -885,10 +890,10 @@ class Service {
 
         void editContact() {
             Utility::clearScreen();
-            cout << "=== Edit Contact ===" << endl;
+            cout << "=== Edit Contact ===\n" << endl;
             cout << "Enter Full Name: ";
             string name;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // cin.ignore(numeric_limits<streamsize>::max(), '\n');
             getline(cin, name);
 
             Contact* ptr = searchContactUtil(root, name);
@@ -902,10 +907,10 @@ class Service {
 
         void deleteContact() {
             Utility::clearScreen();
-            cout << "=== Delete Contact ===" << endl;
+            cout << "=== Delete Contact ===\n" << endl;
             cout << "Enter Full Name : ";
             string name;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            // cin.ignore(numeric_limits<streamsize>::max(), '\n');
             getline(cin, name);
             Contact* ptr = searchContactUtil(root, name);
             if(ptr != NULL) {
