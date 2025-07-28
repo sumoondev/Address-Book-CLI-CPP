@@ -1072,6 +1072,7 @@ int main() {
                 }
                 menu(current_profile);
                 break;
+            
             case '3':
                 Utility::clearScreen();
                 cout << "=== List of Contact ===" << endl;
