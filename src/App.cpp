@@ -430,7 +430,7 @@ class Utility {
                 } else if(profiles[mid]->username.compare(username) > 0) {
                     right = mid-1;
                 } else {
-                    left = mid-1;
+                    left = mid+1;
                 }
             }
             return -1;
