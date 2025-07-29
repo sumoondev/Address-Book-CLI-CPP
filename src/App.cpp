@@ -1,7 +1,7 @@
 #include <iostream>     // perform io operations
 #include <cstdlib>      // for system() fn
 #include <cstring>      // perform string operation
-#include <chrono>       // for chrono::millisecond() fn
+#include <chrono>       // for chrono::milliseconds() fn
 #include <thread>       // for this_thread::sleep_for() fn
 #include <fstream>      // for file handling
 #include <limits>
@@ -169,9 +169,9 @@ class Profile {
             contact = root;
         }
 
-        ~Profile() {
-            delete contact;
-        }
+        // ~Profile() {
+        //     delete contact;
+        // }
 
         bool login(string pwd) const {
             if(this->password.compare(pwd) == 0) {
