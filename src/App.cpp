@@ -423,15 +423,17 @@ class Utility {
 
             while(left <= right) {
                 mid = left + (right - left)/2;
+                // cout << endl << "a";
 
                 if(profiles[mid]->username.compare(username) == 0) {
                     return mid;
                 } else if(profiles[mid]->username.compare(username) > 0) {
-                    right = mid;
+                    right = mid-1;
                 } else {
-                    left = mid;
+                    left = mid-1;
                 }
             }
+            return -1;
         }
 
         void listProfile(const vector<Profile*>& profiles) {
@@ -461,6 +463,17 @@ class Utility {
                 mergeSortUtil(profiles, left, mid, right);
             }
         }
+
+        // void deleteProfile(vector<Profile*>& profiles, int index) {
+        //     if (index >= 0 && index < static_cast<int>(profiles.size())) {
+        //         // Optionally, delete the Profile object if you own the memory
+        //         delete profiles[index]; // Free the memory if necessary
+        //         // Erase the element at the specified index
+        //         profiles.erase(profiles.begin() + index);
+        //     } else {
+        //         std::cerr << "Index out of bounds." << std::endl;
+        //     }
+        // }
 };
 
 // For performing vital operations like add contact, delete contact, etc;
@@ -1055,12 +1068,13 @@ int main() {
     bool loop = true;
     char choice;
     string usrname, password, repwd;
+    string confirm;
     Profile* current_profile; 
     int curr;
     while(loop) {
         Utility::clearScreen();
         cout << "=== Address Book CLI by The G's ===" << endl;
-        cout << "1) Create Profile\n2) Login To Profile\n3) List Profile\n4) Exit\n";
+        cout << "1) Create Profile\n2) Login To Profile\n3) List Profile\n4) Delete Profile\n5) Exit\n";
         cout << "Enter a choice : ";
         cin >> choice;
         // Ignore the newline character left in the input buffer
@@ -1114,8 +1128,8 @@ int main() {
                 if(password.compare(repwd) != 0) {
                     cout << "\x1b[A";           // move cursor up by one line
                     Utility::printSpace();
-                    cout << "\x1b[A";  
-                    cout << "Re-password : ";
+                    // cout << "\x1b[A";  
+                    cout << "\rRe-password : ";
                     Utility::printWithAnimation("Password does not match !!!");
                     cout << endl;
                     break;
@@ -1169,15 +1183,67 @@ int main() {
                 }
                 menu(current_profile);
                 break;
-            
             case '3':
                 Utility::clearScreen();
-                cout << "=== List of Contact ===" << endl;
+                cout << "=== List of Profiles ===" << endl;
                 util.listProfile(profiles);
                 Utility::printLine();
                 Utility::pressEnterToContinue();
                 break;
             case '4':
+                Utility::clearScreen();
+                cout << "=== Delete Profile ===" << endl;
+                if(profiles.size() == 0) {
+                    cout << endl;
+                    Utility::printWithAnimation("No users in database !!!");
+                    cout << endl;
+                    break;
+                }
+                cout << "Username : ";
+                getline(cin, usrname);
+                curr = util.getProfileIndex(profiles, usrname);
+                if(curr == -1) {
+                    cout << "\x1b[A";
+                    Utility::printSpace();
+                    cout << "\x1b[A" << "Username : ";
+                    Utility::printWithAnimation("User not found");
+                    cout << endl;
+                    break;
+                }
+                cout << "Password : ";
+                // cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                getline(cin, password);
+                current_profile = profiles[curr];
+                if(!current_profile->login(password)) {
+                    cout << "\x1b[A";
+                    Utility::printSpace();
+                    cout << "\rPassword : ";
+                    Utility::printWithAnimation("Password incorrect");
+                    cout << endl;
+                    break;
+                }
+                Utility::clearScreen();
+                cout << "=== Delete Profile ===" << endl;
+                cout << current_profile->username << endl;
+                cout << "\nType \"CONFIRM\" to delete : ";
+                getline(cin, confirm);
+                if(confirm != "CONFIRM") {
+                    cout << "\x1b[A";    
+                    Utility::printSpace();
+                    cout << "\rType \"CONFIRM\" to delete : ";
+                    Utility::printWithAnimation("Invalid message typed");
+                    cout << "\r";
+                    Utility::printSpace();
+                    cout << "\rType \"CONFIRM\" to delete : ";
+                    Utility::printWithAnimation("Canceling delete");
+                    this_thread::sleep_for(chrono::milliseconds(200));
+                    break;
+                }
+                // util.e
+                delete profiles[curr];
+                profiles.erase(profiles.begin()+curr);
+                break;
+            case '5':
                 loop = false;
                 util.saveProfiles(profiles);
                 break;
