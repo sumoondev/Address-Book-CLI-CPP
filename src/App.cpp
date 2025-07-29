@@ -8,6 +8,8 @@
 #include <climits>
 #include <memory>
 #include <vector>
+#include <string>
+#include <cctype>
 
 #include "../libs/json/include/nlohmann/json.hpp"
 
@@ -37,10 +39,10 @@ class Contact {
             this->height = 1;
         }
 
-        ~Contact() {
-            delete left;
-            delete right;
-        }
+        // ~Contact() {
+        //     delete left;
+        //     delete right;
+        // }
 
         void display() {
             cout << "1. Full Name : " << this->name << endl;
@@ -107,7 +109,7 @@ class Contact {
         // Serialize a contact (including subtree)
         static json serialize(Contact* node) {
             if (!node) {
-                return nullptr;
+                return json(nullptr); 
             }
 
             json j;
@@ -180,9 +182,9 @@ class Profile {
 
         void to_json(json& j) const {
             j = {
-                {"username", username},
+                {"contact", Contact::serialize(contact)},
                 {"password", password},
-                {"contact", Contact::serialize(contact)}
+                {"username", username}
             };
         }
 
@@ -211,7 +213,6 @@ class Utility {
             vector<Profile*> L(n1);
             vector<Profile*> R(n2);
             for (int i = 0; i < n1; i++) {
-                int a = left + i;
                 L[i] = profiles[left + i];
             }
             for (int j = 0; j < n2; j++) {
@@ -740,6 +741,7 @@ class Service {
                 cout << "5. Exit"<<endl;
                 cout << "\nWhat to Edit(eg : 1, 2, 3, 4, 5) : ";
                 cin >> choice;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 switch(choice) {
                     case '1':
                         Utility::clearScreen();
@@ -749,7 +751,7 @@ class Service {
                         cout << "Address : " << curr->getAddress() << endl;
                         cout << "Full Name : ";
                         // cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                        getline(cin, name);
+                        // getline(cin, name);
                         getline(cin,name);
                         if(!Utility::isNameValid(name)) {
                             cout << "Name Invalid!!!\nName Unchanged" << endl;
@@ -770,7 +772,7 @@ class Service {
                         cout << "Address : " << curr->getAddress() << endl;
                         cout << "Email : " << curr->getEmail() << endl;
                         cout << "Mobile: ";
-                        getline(cin, mobile);
+                        // getline(cin, mobile);
                         getline(cin, mobile);
                         if(!Utility::isMobileValid(mobile)) {
                             cout << "Mobile number invalid!!!\nMobile number Unchanged" << endl;
@@ -789,7 +791,7 @@ class Service {
                         cout << "Mobile : " << curr->getMobile() << endl;
                         cout << "Email : " << curr->getEmail() << endl;
                         cout << "Address : ";
-                        getline(cin, address);
+                        // getline(cin, address);
                         getline(cin, address);
                         if(address.compare("") == 0) {
                             cout << "Address empty invalid!!!\nAddress Unchanged" << endl;
@@ -808,7 +810,7 @@ class Service {
                         cout << "Mobile : " << curr->getMobile() << endl;
                         cout << "Address : " << curr->getAddress() << endl;
                         cout << "Email : ";
-                        getline(cin, email);
+                        // getline(cin, email);
                         getline(cin, email);
                         if(!util.isEmailValid(email)) {
                             cout << "Email invalid!!!\nEmail Unchanged" << endl;
