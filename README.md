@@ -4,6 +4,130 @@ Provides core contact management features—CRUD operations, JSON persistence, s
 
 ---
 
+## Table of Contents
+
+* [Project Overview](#project-overview)
+* [Features](#features)
+* [Prerequisites](#prerequisites)
+* [Getting Started](#getting-started)
+
+  * [Clone & Build](#clone--build)
+  * [Run](#run)
+* [Usage Examples](#usage-examples)
+* [Project Structure](#project-structure)
+* [Configuration](#configuration)
+* [Testing](#testing)
+* [Contributing](#contributing)
+* [License](#license)
+* [Acknowledgments](#acknowledgments)
+
+---
+
+## Project Overview
+
+This repository contains a single source file, **`App.cpp`**, which implements a console‑based Address Book. It uses a binary‑search tree (BST) for in‑memory contact storage and the [nlohmann/json](https://github.com/nlohmann/json) library for JSON persistence. User authentication, input validation, and animated console output are all contained within `App.cpp`.
+
+---
+
+## Features
+
+* User **Sign Up / Sign In** with per‑user JSON sessions
+* **Add / Update / Delete / Search / View All** contacts
+* **BST‑backed** in‑memory data structure
+* **JSON** file persistence (`<username>.json`)
+* Animated CLI with clear‑screen and typing effects
+
+---
+
+## Prerequisites
+
+* A C++ compiler supporting **C++11** or later (e.g., `g++`, `clang++`, MSVC)
+* The included **nlohmann/json** library (in `libs/json`)
+
+---
+
+## Getting Started
+
+### Clone & Build
+
+```bash
+git clone https://github.com/PhantomBenz/Address-Book-CLI-CPP.git
+cd Address-Book-CLI-CPP
+```
+
+#### Linux / macOS
+
+```bash
+g++ -std=c++11 -Ilibs/json/include App.cpp -o addressbook
+```
+
+#### Windows (MSVC)
+
+```powershell
+cl /EHsc /std:c++17 /I libs\json\include App.cpp /Fe:addressbook.exe
+```
+
+---
+
+### Run
+
+```bash
+# On Linux / macOS
+./addressbook
+
+# On Windows
+addressbook.exe
+```
+
+On first run, choose **Sign Up** to create an account. On subsequent runs, choose **Sign In** to load your contacts.
+
+---
+
+## Usage Examples
+
+```bash
+$ ./addressbook
+Welcome to Address Book CLI!
+[1] Sign In
+[2] Sign Up
+Choice: 2
+
+-- Sign Up --
+Enter new username: alice
+Enter new password: *****
+Account created! Please sign in.
+
+[1] Sign In
+[2] Sign Up
+Choice: 1
+
+-- Sign In --
+Username: alice
+Password: *****
+Login successful! Loading your contacts...
+
+Main Menu:
+1. Add Contact
+2. Update Contact
+3. Delete Contact
+4. Search Contact
+5. View All Contacts
+6. Save & Exit
+Choice: 1
+
+-- Add Contact --
+Name    : Bob Smith
+Mobile  : 1234567890
+Email   : bob@example.com
+Address : 123 Maple Street
+Contact added!
+Press Enter to continue…
+```
+
+Selecting **6. Save & Exit** serializes your BST to `alice.json` and exits.
+
+---
+
 ### Repository Structure
 
 ```
@@ -21,64 +145,27 @@ Address-Book-CLI-CPP/                 ← Top-level repository
 
 ---
 
-### Project Overview
+## Configuration
 
-This project Address Book application implements:
-  - Create, Read, Update, Delete (CRUD) of contacts
-  - Stores data like name, address, phone numbers, and emails
-  - JSON-based persistence (load on startup, save on exit)
-  - Validation, duplicate detection, and basic search/filter capabilities
+* **User files**: Each account’s data is stored in `addressbook.json` in the working directory.
+* To modify storage behavior, edit the JSON handling in `App.cpp`.
 
 ---
 
-### Getting Started 
+## Testing
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/PhantomBenz/Address-Book-CLI-CPP.git
-   cd Address-Book-CLI-CPP/
-   ```
-
-2. **Build and Run**
-
-    * **Required Dependencies**
-      - C/C++ 
-      - C/C++ Extension Pack
-      *Note: For Visual Studio Code*
-
-   * **For Windows**:
-
-     ```bash
-
-     ```
-   
-   * **For Linux/Mac**:
-
-     ```bash
-      
-     ```
-
-3. **Usage**
-
-   * On startup, existing contacts are loaded from `addressbook.json` (if present).
-   * Follow the on-screen menu to add, list, search, edit, or delete contacts.
-   * On exit, all changes are saved back to `addressbook.json`.
+*(No automated tests provided. You may write your own by refactoring into smaller modules.)*
 
 ---
 
-## Usage Examples
+## Contributing
 
-```
-=== Address Book CLI ===
+Contributions are welcome! Since all functionality resides in `App.cpp`, please keep changes well commented and minimal:
 
-1) Add Contact
-2) List All Contacts
-3) Search Contacts
-4) Edit Contact
-5) Delete Contact
-0) Exit
-Enter choice: 
-```
+1. Fork the repository
+2. Create a feature branch
+3. Make and test your changes
+4. Submit a Pull Request
 
 ---
 
