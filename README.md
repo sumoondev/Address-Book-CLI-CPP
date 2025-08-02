@@ -10,7 +10,6 @@ Provides core contact management features—CRUD operations, JSON persistence, s
 * [Features](#features)
 * [Prerequisites](#prerequisites)
 * [Getting Started](#getting-started)
-
   * [Clone & Build](#clone--build)
   * [Run](#run)
 * [Usage Examples](#usage-examples)
@@ -31,10 +30,12 @@ This repository contains a single source file, **`App.cpp`**, which implements a
 
 ## Features
 
-* User **Sign Up / Sign In** with per‑user JSON sessions
+* On startup, all profiles and existing contacts are loaded from **`addressbook.json`** (if present).
+* User **Sign Up / Sign In** from loaded JSON file
 * **Add / Update / Delete / Search / View All** contacts
 * **BST‑backed** in‑memory data structure
-* **JSON** file persistence (`<username>.json`)
+* JSON-based persistence (load on startup, save on exit)
+* Validation, duplicate detection, and basic search/filter capabilities
 * Animated CLI with clear‑screen and typing effects
 
 ---
@@ -58,13 +59,13 @@ cd Address-Book-CLI-CPP
 #### Linux / macOS
 
 ```bash
-g++ -std=c++11 -Ilibs/json/include App.cpp -o addressbook
+g++ -std=c++11 -Ilibs/json/include src/App.cpp -o addressbook
 ```
 
 #### Windows (MSVC)
 
 ```powershell
-cl /EHsc /std:c++17 /I libs\json\include App.cpp /Fe:addressbook.exe
+cl /EHsc /std:c++17 /I libs\json\include src/App.cpp /Fe:addressbook.exe
 ```
 
 ---
@@ -86,49 +87,52 @@ On first run, choose **Sign Up** to create an account. On subsequent runs, choos
 ## Usage Examples
 
 ```bash
-$ ./addressbook
-Welcome to Address Book CLI!
-[1] Sign In
-[2] Sign Up
-Choice: 2
+-- Main Page --
+=== Address Book CLI by The G's ===
+1) Create Profile
+2) Login To Profile
+3) List Profile
+4) Delete Profile
+5) Exit
+Enter a choice : 
 
 -- Sign Up --
-Enter new username: alice
-Enter new password: *****
-Account created! Please sign in.
-
-[1] Sign In
-[2] Sign Up
-Choice: 1
+=== Create Profile ===
+Username    : Alice
+Password    : *****
+Re-password : *****
+----------------------------------
+User created
 
 -- Sign In --
-Username: alice
+Username: Alice
 Password: *****
 Login successful! Loading your contacts...
 
-Main Menu:
-1. Add Contact
-2. Update Contact
-3. Delete Contact
-4. Search Contact
-5. View All Contacts
-6. Save & Exit
-Choice: 1
+-- After Login --
+User : Alice
+=== Address Book CLI ===
+1) Add Contact
+2) List All Contacts
+3) Search Contacts
+4) Edit Contact
+5) Delete Contact
+6) Log Out
+
+Enter a choice : 
 
 -- Add Contact --
 Name    : Bob Smith
 Mobile  : 1234567890
-Email   : bob@example.com
 Address : 123 Maple Street
+Email   : bob@example.com
 Contact added!
 Press Enter to continue…
 ```
 
-Selecting **6. Save & Exit** serializes your BST to `alice.json` and exits.
-
 ---
 
-### Repository Structure
+### Project Structure
 
 ```
 Address-Book-CLI-CPP/                 ← Top-level repository
