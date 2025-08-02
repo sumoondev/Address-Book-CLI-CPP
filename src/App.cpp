@@ -204,7 +204,7 @@ class Profile {
 // For performing utility operations like clear screen, load and save contact, etc.
 class Utility {
     private:
-        string FILE_PATH = "../../addressbook.json";
+        string FILE_PATH = "addressbook.json";
     
         // Merge sort utility
         void mergeSortUtil(vector<Profile*>& profiles, int left, int mid, int right) {
