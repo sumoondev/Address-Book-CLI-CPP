@@ -52,7 +52,7 @@ This repository contains a single source file, **`App.cpp`**, which implements a
 ### Clone & Build
 
 ```bash
-git clone https://github.com/PhantomBenz/Address-Book-CLI-CPP.git
+git clone https://github.com/sumoondev/Address-Book-CLI-CPP.git
 cd Address-Book-CLI-CPP
 ```
 
